@@ -1,3 +1,4 @@
+import re
 import pandas as pd
 import numpy as np
 import gspread
@@ -15,16 +16,8 @@ def get_data(credentials):
     wks = gc.open("Turnip price tracker").sheet1
 
     l = wks.get_all_values()
-    df = pd.DataFrame.from_records(l)[:-2]
-
-    # Hardcoding columns, since we got two columns in the middle with '$$$$' instead of real names
-    # Painful...
-    # Add more names here if more people joins
-    df.columns = ["day", "Kai", "Diane", "Jen", "Nick", "Helen", "Lara", "lol2", "Miguel", "lol3",
-                  "Maria Jose", "Cristian"]
-
-    # Removing the useless columns...
-    df = df.drop(["lol2", "lol3"], axis=1)
+    column_names = ["day"] + [re.sub("\ week\ \d+", "", i) for i in l[0][1:]]
+    df = pd.DataFrame.from_records(l, columns=column_names)[:-2]
 
     # Removing the lines without a day
     df = df[df.day != ""]
