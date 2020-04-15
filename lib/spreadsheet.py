@@ -65,3 +65,30 @@ def get_prev(credentials):
     df = get_data(credentials)
     d = df.tail(2).head(1).to_dict()
     return format_message(d)
+
+def get_fossils(credentials):
+    scope = ['https://spreadsheets.google.com/feeds',
+             'https://www.googleapis.com/auth/drive']
+    credentials = Credentials.from_service_account_file(credentials, scopes=scope)
+    gc = gspread.authorize(credentials)
+
+    wks = gc.open("Turnip price tracker").worksheet("Fossils")
+
+    l = wks.get_all_values()
+    column_names = ["name1", "name2"] + [re.sub("\ week\ \d+", "", i).lower().replace("á", "a") for i in l[0][2:]]
+    df = pd.DataFrame.from_records(l, columns=column_names)[1:-2]
+
+    empty_columns = [i for i, name in enumerate(df.columns) if name == ""]
+
+    df = df.drop(df.columns[empty_columns], axis=1)
+    df["name"] = df["name1"] + " " +  df["name2"]
+    df["name"] = df["name"].str.strip()
+    df = df.drop(["name1", "name2"], axis=1)
+
+    d_missing = {i: None for i in df.columns if i != "name"}
+    d_repeated = {i: None for i in df.columns if i != "name"}
+    for key, value in d_missing.items():
+        d_missing[key] = list(df["name"][df[key].str.lower() != "x"])
+        d_repeated[key] = list(df["name"][df[key].str.lower() == "e"])
+
+    return d_missing, d_repeated, [i for i in df.columns if i != "name"]

@@ -7,7 +7,7 @@ from telegram.ext import Updater
 from telegram.ext import MessageHandler, Filters
 from telegram.ext import CommandHandler
 
-from lib.spreadsheet import get_last, get_prev
+from lib.spreadsheet import get_last, get_prev, get_fossils
 from lib.critters import (format_similar_names, get_similar_names,
                           format_info, get_info)
 
@@ -74,6 +74,58 @@ def bug(update, context):
         parse_mode=telegram.ParseMode.MARKDOWN_V2,
     )
 
+def fossils(update, context):
+    try:
+        arg = context.args[0]
+    except IndexError:
+        arg = ""
+
+    try:
+        name = context.args[1]
+        name = re.sub("\s+", " ", " ".join(update.message.text.split(" ")[2:]))
+        name = name.lower().replace("á", "a")
+    except:
+        name = ""
+
+    # Getting data
+    missing, repeated, names = get_fossils(CREDENTIALS)
+
+    if arg == "" or arg == "people" or arg == "help":
+        msg = "People:\n\t"
+        msg += ", ".join(names)
+        msg += f"\n\nUsage:\n `/fossils need <name>` for the needed ones"
+        msg += f"\n\nUsage:\n `/fossils have <name>` for the repeated ones"
+
+    elif arg == "need":
+        if name == "":
+            msg = f"Usage:\n `/fossils need <name>`"
+        else:
+            if name not in missing:
+                msg = f"Name '{name}' not found in: {', '.join(names)}"
+            elif missing[name]:
+                msg = "\n".join(missing[name])
+            else:
+                msg = "No results"
+
+    elif arg == "have":
+        if name == "":
+            msg = f"Usage:\n `/fossils have <name>`"
+        else:
+            if name not in repeated:
+                msg = f"Name '{name}' not found in: {', '.join(names)}"
+            elif repeated[name]:
+                msg = "\n".join(repeated[name])
+            else:
+                msg = "No results"
+
+    print(msg)
+    msg = msg.replace(".", "\.")
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
+        parse_mode=telegram.ParseMode.MARKDOWN_V2,
+    )
+
 if __name__ == "__main__":
     logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
                         level=logging.INFO)
@@ -99,5 +151,8 @@ if __name__ == "__main__":
 
     bug_handler = CommandHandler("bug", bug, pass_args=True)
     dispatcher.add_handler(bug_handler)
+
+    fossils_handler = CommandHandler("fossils", fossils, pass_args=True)
+    dispatcher.add_handler(fossils_handler)
 
     updater.start_polling()
