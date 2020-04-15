@@ -90,5 +90,6 @@ def get_fossils(credentials):
     for key, value in d_missing.items():
         d_missing[key] = list(df["name"][df[key].str.lower() != "x"])
         d_repeated[key] = list(df["name"][df[key].str.lower() == "e"])
+        d_missing[key] = [i for i in d_missing[key] if i not in d_repeated[key]]
 
     return d_missing, d_repeated, [i for i in df.columns if i != "name"]

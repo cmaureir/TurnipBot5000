@@ -103,7 +103,22 @@ def fossils(update, context):
             if name not in missing:
                 msg = f"Name '{name}' not found in: {', '.join(names)}"
             elif missing[name]:
-                msg = "\n".join(missing[name])
+                needed = []
+                for x in missing[name]:
+                    dino = x
+                    people = []
+                    for key, value in repeated.items():
+                        if key == name:
+                            continue
+                        if x in value:
+                            people.append(key)
+
+                    if people:
+                        dino = dino[:-1] + f" `({','.join(people)})`"
+                    needed.append(dino)
+                #msg = "\n".join(missing[name])
+                msg = "\n".join(needed)
+
             else:
                 msg = "No results"
 
@@ -120,6 +135,9 @@ def fossils(update, context):
 
     print(msg)
     msg = msg.replace(".", "\.")
+    msg = msg.replace("(", "\(")
+    msg = msg.replace(")", "\)")
+    msg = msg.replace("-", "\-")
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=msg,
