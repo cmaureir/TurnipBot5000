@@ -93,3 +93,28 @@ def get_fossils(credentials):
         d_missing[key] = [i for i in d_missing[key] if i not in d_repeated[key]]
 
     return d_missing, d_repeated, [i for i in df.columns if i != "name"]
+
+
+def get_songs(credentials):
+    scope = ['https://spreadsheets.google.com/feeds',
+             'https://www.googleapis.com/auth/drive']
+    credentials = Credentials.from_service_account_file(credentials, scopes=scope)
+    gc = gspread.authorize(credentials)
+
+    wks = gc.open("Turnip price tracker").worksheet("Songs")
+
+    l = wks.get_all_values()
+
+    column_names = ["song"] + [re.sub("\ week\ \d+", "", i).lower().replace("á", "a") for i in l[0][1:]]
+    df = pd.DataFrame.from_records(l, columns=column_names).iloc[1:96, 0:11]
+
+    d_missing = {i: None for i in df.columns if i != "song"}
+    d_repeated = {i: None for i in df.columns if i != "song"}
+
+    print([i for i in df.columns if i != "song"])
+
+    for key, value in d_missing.items():
+        d_missing[key] = list(df["song"][df[key] == ""])
+        d_repeated[key] = list(df["song"][df[key] != ""])
+
+    return d_missing, d_repeated, [i for i in df.columns if i != "song"]
