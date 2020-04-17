@@ -126,3 +126,8 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Turnip Bot config
+config.ini
+credentials.json
+
