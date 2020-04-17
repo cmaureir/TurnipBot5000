@@ -95,6 +95,7 @@ def fossils(update, context):
         msg += ", ".join(names)
         msg += f"\n\nUsage:\n `/fossils need <name>` for the needed ones"
         msg += f"\n\nUsage:\n `/fossils have <name>` for the repeated ones"
+        msg += f"\n\nUsage:\n `/fossils want <fossil>` to know who wants it"
 
     elif arg == "need":
         if name == "":
@@ -133,6 +134,19 @@ def fossils(update, context):
             else:
                 msg = "No results"
 
+    elif arg == "want":
+        if name == "":
+            msg = f"Usage: \n `/fossils want <fossil>`"
+        else:
+            msg = ""
+            for fossil in set([item for sublist in missing.values() for item in sublist]):
+                if name.lower() in fossil.lower():
+                    msg += "\nFound: " + fossil
+                    msg += "\nWanted by:\n"
+                    for item in missing:
+                        if fossil in missing[item]:
+                            msg += " - " + item + "\n"
+
     print(msg)
     msg = msg.replace(".", "\.")
     msg = msg.replace("(", "\(")
@@ -167,6 +181,7 @@ def songs(update, context):
         msg += "\n\nYou can order songs from the Nook Shopping App or ATM\n"
         msg += f"\n\nUsage:\n `/songs need <name>` for the needed ones"
         msg += f"\n\nUsage:\n `/songs have <name>` for the songs they have"
+        msg += f"\n\nUsage:\n `/songs want <song>` to know who wants it"
 
     elif arg == "need":
         if name == "":
@@ -204,6 +219,21 @@ def songs(update, context):
                 msg = "\n".join(have[name])
             else:
                 msg = "No results"
+
+    elif arg == "want":
+        if name == "":
+            msg = f"Usage: \n `/songs want <song>`"
+        else:
+            msg = ""
+            for song in set([item for sublist in missing.values() for item in sublist]):
+                if name.lower() in song.lower():
+                    msg += "\nFound: " + song
+                    msg += "\nWanted by:\n"
+                    for item in missing:
+                        if song in missing[item]:
+                            msg += " - " + item + "\n"
+
+
 
     print(msg)
     msg = msg.replace(".", "\.")
