@@ -1,4 +1,6 @@
+import os
 import re
+import pickle
 import logging
 import configparser
 
@@ -15,6 +17,89 @@ from lib.critters import (format_similar_names, get_similar_names,
 
 def test(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="It's working")
+
+def til(update, context):
+    filename = "til.pkl"
+    d = None
+    if not os.path.isfile(filename):
+        print("File doesn't exist, creating")
+        d = {}
+        d_id = 0
+    else:
+        with open(filename, "rb") as f:
+            d = pickle.load(f)
+            try:
+                d_id = sorted(d.keys(), reverse=True)[0] + 1
+            except IndexError:
+                d_id = 0
+
+    try:
+        arg = context.args[0]
+    except IndexError:
+        arg = ""
+
+    if arg == "" or arg == "show":
+        if d:
+            msg = "\n".join([f"{key}: {value}" for key,value in d.items()])
+        else:
+            msg = "No items"
+
+    elif arg == "help":
+        msg = (
+            "Usage:\n"
+            "\n    /til           : Show the saved items"
+            "\n    /til show      : Show the saved items"
+            "\n    /til add <msg> : Add the <msg> to the internal list"
+            "\n    /til del <id>  : Remove the <id> from the internal list"
+            )
+    elif arg == "add":
+        print("Add item")
+        try:
+            msg = " ".join(context.args[1:])
+            if not msg.strip():
+                raise
+            print("Message:", msg)
+
+            print("Before:", d)
+            d[d_id] = msg
+            print("After:", d)
+            with open(filename, "wb") as f:
+                pickle.dump(d, f)
+            msg = f"Added {d_id} : {msg}"
+        except:
+            msg = "content is needed when adding a new TIL"
+    elif arg == "del":
+        msg = "Del item"
+        try:
+            msg = context.args[1]
+            print("Message:", msg, type(msg))
+            if not msg.strip():
+                raise
+
+            msg_n = int(msg)
+
+            if msg_n in d:
+                msg = f"Removing {msg_n} : {d[msg_n]}"
+                print("Before:", d)
+                del d[msg_n]
+                print("After:", d)
+
+                with open(filename, "wb") as f:
+                    pickle.dump(d, f)
+            else:
+                msg = f"The id {msg} was not found"
+        except:
+            msg = "Need and ID to remove"
+    else:
+        msg = (
+            "Usage:\n"
+            "\n    /til           : Show the saved items"
+            "\n    /til show      : Show the saved items"
+            "\n    /til add <msg> : Add the <msg> to the internal list"
+            "\n    /til del <id>  : Remove the <id> from the internal list"
+            )
+
+    context.bot.send_message(chat_id=update.effective_chat.id, text=msg)
 
 
 def prices(update, context):
@@ -278,5 +363,8 @@ if __name__ == "__main__":
 
     songs_handler = CommandHandler("songs", songs, pass_args=True)
     dispatcher.add_handler(songs_handler)
+
+    til_handler = CommandHandler("til", til)
+    dispatcher.add_handler(til_handler)
 
     updater.start_polling()
